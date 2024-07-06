@@ -7,50 +7,116 @@
     <style>
         body {
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
             margin: 0;
-            font-family: Arial, sans-serif;
             background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            position: relative;
         }
         #gameCanvas {
-            border: 2px solid #333;
-            background-color: white;
+            border: 2px solid #000;
+        }
+        #gameInfo {
+            margin-top: 10px;
+            text-align: center;
+        }
+        #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        #menuScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4a90e2, #7f8c8d);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        #menuScreen h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        #menuScreen p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            text-align: center;
+            max-width: 80%;
+            line-height: 1.4;
         }
         #startButton {
+            padding: 12px 24px;
             font-size: 20px;
-            padding: 10px 20px;
-            margin-top: 20px;
-            background-color: #4CAF50;
+            background-color: #2ecc71;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 25px;
             cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        #score {
-            font-size: 24px;
-            margin-top: 10px;
+        #startButton:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+        }
+        #startButton:active {
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <button id="startButton">Inizia Gioco</button>
-    <div id="score">Punteggio: 0</div>
-
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <div id="gameInfo">
+            <p>Punteggio: <span id="score">0</span></p>
+        </div>
+        <div id="message"></div>
+        <div id="menuScreen">
+            <h1>Frabio in ufficio</h1>
+            <p>Aiuta Frabio a raccogliere tutte le croci evitando le galline!</p>
+            <button id="startButton">Inizia Gioco</button>
+        </div>
+    </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const messageEl = document.getElementById('message');
+        const menuScreen = document.getElementById('menuScreen');
         const startButton = document.getElementById('startButton');
-        const scoreDisplay = document.getElementById('score');
 
         const CELL_SIZE = 20;
         const GRID_WIDTH = 20;
         const GRID_HEIGHT = 20;
 
-        let frabio, chickens, crosses, score, gameRunning;
+        let frabio, chickens, crosses, score;
+        let gameRunning = false;
+        let gameLoop;
+
+        startButton.addEventListener('click', startGame);
+
+        function startGame() {
+            menuScreen.style.display = 'none';
+            canvas.style.display = 'block';
+            initGame();
+            gameLoop = setInterval(runGameLoop, 200);
+        }
 
         function initGame() {
             frabio = { x: 1, y: 1 };
@@ -68,41 +134,63 @@
                 }
             }
             score = 0;
-            gameRunning = true;
             updateScore();
+            gameRunning = true;
             drawGame();
         }
 
         function drawFrabio(x, y) {
+            // Corpo
             ctx.fillStyle = '#FFA6C9';
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 2, CELL_SIZE / 2);
+            
+            // Testa
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE, CELL_SIZE / 2, CELL_SIZE / 2);
+            
+            // Braccia
             ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE + CELL_SIZE / 3, CELL_SIZE / 5, CELL_SIZE / 2);
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 4/5, y * CELL_SIZE + CELL_SIZE / 3, CELL_SIZE / 5, CELL_SIZE / 2);
+            
+            // Gambe
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE * 3/4, CELL_SIZE / 5, CELL_SIZE / 4);
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 11/20, y * CELL_SIZE + CELL_SIZE * 3/4, CELL_SIZE / 5, CELL_SIZE / 4);
+            
+            // Pantaloncini
             ctx.fillStyle = '#2E8B57';
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE * 2/3, CELL_SIZE / 2, CELL_SIZE / 6);
+            
+            // Occhi
             ctx.fillStyle = '#000';
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 5/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
+            
+            // Bocca
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE * 3/8, CELL_SIZE / 4, CELL_SIZE / 16);
         }
 
         function drawChicken(x, y, color, hairColor) {
+            // Corpo
             ctx.fillStyle = color;
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE / 2, CELL_SIZE / 2, CELL_SIZE / 2);
+            
+            // Testa
             ctx.beginPath();
             ctx.arc(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 3, CELL_SIZE / 3, 0, 2 * Math.PI);
             ctx.fill();
+            
+            // Capelli
             ctx.fillStyle = hairColor;
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE, CELL_SIZE / 2, CELL_SIZE / 3);
+            
+            // Occhi
             ctx.fillStyle = '#FFF';
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 5/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
             ctx.fillStyle = '#000';
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 16, CELL_SIZE / 16);
             ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 5/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 16, CELL_SIZE / 16);
+            
+            // Becco
             ctx.fillStyle = '#FF6347';
             ctx.beginPath();
             ctx.moveTo(x * CELL_SIZE + CELL_SIZE * 3/4, y * CELL_SIZE + CELL_SIZE * 3/8);
@@ -125,6 +213,7 @@
         function drawGame() {
             ctx.fillStyle = '#FFF';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+
             crosses.forEach(cross => drawCross(cross.x, cross.y));
             chickens.forEach(chicken => drawChicken(chicken.x, chicken.y, chicken.color, chicken.hairColor));
             drawFrabio(frabio.x, frabio.y);
@@ -139,10 +228,10 @@
             });
         }
 
-        function checkCollisions() {
+        function checkCollision() {
             chickens.forEach(chicken => {
                 if (chicken.x === frabio.x && chicken.y === frabio.y) {
-                    alert("Bravo! Hai vinto un bel bestemmione");
+                    showMessage("Bravo! Hai vinto un bel bestemmione");
                     gameRunning = false;
                 }
             });
@@ -157,33 +246,42 @@
             });
 
             if (crosses.length === 0) {
-                alert("Hai vinto! Hai raccolto tutte le croci!");
+                showMessage("Hai vinto! Frabio ha raccolto tutte le croci!");
                 gameRunning = false;
             }
         }
 
+        function showMessage(msg) {
+            messageEl.textContent = msg;
+            messageEl.style.display = 'block';
+        }
+
+        function hideMessage() {
+            messageEl.style.display = 'none';
+        }
+
         function updateScore() {
-            scoreDisplay.textContent = `Punteggio: ${score}`;
+            document.getElementById('score').textContent = score;
         }
 
-        function gameLoop() {
-            if (!gameRunning) return;
-            moveChickens();
-            checkCollisions();
-            drawGame();
-            requestAnimationFrame(gameLoop);
+        function runGameLoop() {
+            if (gameRunning) {
+                moveChickens();
+                checkCollision();
+                drawGame();
+            }
         }
 
-        startButton.addEventListener('click', () => {
-            initGame();
-            gameLoop();
-        });
-
+        // Modifica: Aggiungi controlli touch
         canvas.addEventListener('touchstart', handleTouch);
 
         function handleTouch(e) {
             e.preventDefault();
-            if (!gameRunning) return;
+            if (!gameRunning) {
+                hideMessage();
+                gameRunning = true;
+                return;
+            }
 
             const rect = canvas.getBoundingClientRect();
             const touchX = e.touches[0].clientX - rect.left;
@@ -192,13 +290,19 @@
             const gridX = Math.floor(touchX / CELL_SIZE);
             const gridY = Math.floor(touchY / CELL_SIZE);
 
-            if (Math.abs(gridX - frabio.x) <= 1 && Math.abs(gridY - frabio.y) <= 1) {
-                frabio.x = gridX;
-                frabio.y = gridY;
-                checkCollisions();
+            const dx = gridX - frabio.x;
+            const dy = gridY - frabio.y;
+
+            if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
+                frabio.x += dx;
+                frabio.y += dy;
+                checkCollision();
                 drawGame();
             }
         }
+
+        initGame();
+        drawGame();
     </script>
 </body>
 </html>
