@@ -6,24 +6,28 @@
     <title>Frabio in ufficio</title>
     <style>
         body {
-            margin: 0;
-            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
+            margin: 0;
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
         }
         #gameCanvas {
-            border: 2px solid black;
+            border: 2px solid #333;
             background-color: white;
         }
         #startButton {
             font-size: 20px;
             padding: 10px 20px;
             margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
         #score {
             font-size: 24px;
@@ -32,7 +36,7 @@
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="300" height="300"></canvas>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
     <button id="startButton">Inizia Gioco</button>
     <div id="score">Punteggio: 0</div>
 
@@ -42,24 +46,26 @@
         const startButton = document.getElementById('startButton');
         const scoreDisplay = document.getElementById('score');
 
-        const GRID_SIZE = 10;
-        const CELL_SIZE = canvas.width / GRID_SIZE;
+        const CELL_SIZE = 20;
+        const GRID_WIDTH = 20;
+        const GRID_HEIGHT = 20;
 
         let frabio, chickens, crosses, score, gameRunning;
 
         function initGame() {
-            frabio = { x: 0, y: 0 };
+            frabio = { x: 1, y: 1 };
             chickens = [
-                { x: GRID_SIZE - 1, y: 0 },
-                { x: GRID_SIZE - 1, y: GRID_SIZE - 1 },
-                { x: 0, y: GRID_SIZE - 1 }
+                { x: 18, y: 1, color: '#FFD700', hairColor: '#FFFF00' },
+                { x: 18, y: 18, color: '#000000', hairColor: '#363636' },
+                { x: 1, y: 18, color: '#FFA07A', hairColor: '#FF0000' }
             ];
             crosses = [];
-            for (let i = 0; i < 5; i++) {
-                crosses.push({
-                    x: Math.floor(Math.random() * GRID_SIZE),
-                    y: Math.floor(Math.random() * GRID_SIZE)
-                });
+            for (let y = 0; y < GRID_HEIGHT; y++) {
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    if (x % 2 === 1 && y % 2 === 1) {
+                        crosses.push({ x, y });
+                    }
+                }
             }
             score = 0;
             gameRunning = true;
@@ -67,46 +73,80 @@
             drawGame();
         }
 
+        function drawFrabio(x, y) {
+            ctx.fillStyle = '#FFA6C9';
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 2, CELL_SIZE / 2);
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE, CELL_SIZE / 2, CELL_SIZE / 2);
+            ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE + CELL_SIZE / 3, CELL_SIZE / 5, CELL_SIZE / 2);
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 4/5, y * CELL_SIZE + CELL_SIZE / 3, CELL_SIZE / 5, CELL_SIZE / 2);
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE * 3/4, CELL_SIZE / 5, CELL_SIZE / 4);
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 11/20, y * CELL_SIZE + CELL_SIZE * 3/4, CELL_SIZE / 5, CELL_SIZE / 4);
+            ctx.fillStyle = '#2E8B57';
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE * 2/3, CELL_SIZE / 2, CELL_SIZE / 6);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 5/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE * 3/8, CELL_SIZE / 4, CELL_SIZE / 16);
+        }
+
+        function drawChicken(x, y, color, hairColor) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE / 2, CELL_SIZE / 2, CELL_SIZE / 2);
+            ctx.beginPath();
+            ctx.arc(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 3, CELL_SIZE / 3, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.fillStyle = hairColor;
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE, CELL_SIZE / 2, CELL_SIZE / 3);
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 5/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 16, CELL_SIZE / 16);
+            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 5/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 16, CELL_SIZE / 16);
+            ctx.fillStyle = '#FF6347';
+            ctx.beginPath();
+            ctx.moveTo(x * CELL_SIZE + CELL_SIZE * 3/4, y * CELL_SIZE + CELL_SIZE * 3/8);
+            ctx.lineTo(x * CELL_SIZE + CELL_SIZE, y * CELL_SIZE + CELL_SIZE * 3/8);
+            ctx.lineTo(x * CELL_SIZE + CELL_SIZE * 7/8, y * CELL_SIZE + CELL_SIZE / 2);
+            ctx.fill();
+        }
+
+        function drawCross(x, y) {
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + 2);
+            ctx.lineTo(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE - 2);
+            ctx.moveTo(x * CELL_SIZE + 2, y * CELL_SIZE + CELL_SIZE / 2);
+            ctx.lineTo(x * CELL_SIZE + CELL_SIZE - 2, y * CELL_SIZE + CELL_SIZE / 2);
+            ctx.stroke();
+        }
+
         function drawGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Disegna Frabio
-            ctx.fillStyle = 'blue';
-            ctx.fillRect(frabio.x * CELL_SIZE, frabio.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-
-            // Disegna le galline
-            ctx.fillStyle = 'red';
-            chickens.forEach(chicken => {
-                ctx.fillRect(chicken.x * CELL_SIZE, chicken.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-            });
-
-            // Disegna le croci
-            ctx.fillStyle = 'green';
-            crosses.forEach(cross => {
-                ctx.fillRect(cross.x * CELL_SIZE, cross.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-            });
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            crosses.forEach(cross => drawCross(cross.x, cross.y));
+            chickens.forEach(chicken => drawChicken(chicken.x, chicken.y, chicken.color, chicken.hairColor));
+            drawFrabio(frabio.x, frabio.y);
         }
 
         function moveChickens() {
             chickens.forEach(chicken => {
                 const dx = Math.floor(Math.random() * 3) - 1;
                 const dy = Math.floor(Math.random() * 3) - 1;
-                chicken.x = Math.max(0, Math.min(GRID_SIZE - 1, chicken.x + dx));
-                chicken.y = Math.max(0, Math.min(GRID_SIZE - 1, chicken.y + dy));
+                chicken.x = Math.max(0, Math.min(GRID_WIDTH - 1, chicken.x + dx));
+                chicken.y = Math.max(0, Math.min(GRID_HEIGHT - 1, chicken.y + dy));
             });
         }
 
         function checkCollisions() {
-            // Collisione con le galline
-            for (let chicken of chickens) {
+            chickens.forEach(chicken => {
                 if (chicken.x === frabio.x && chicken.y === frabio.y) {
                     alert("Bravo! Hai vinto un bel bestemmione");
                     gameRunning = false;
-                    return;
                 }
-            }
+            });
 
-            // Raccolta delle croci
             crosses = crosses.filter(cross => {
                 if (cross.x === frabio.x && cross.y === frabio.y) {
                     score += 10;
@@ -116,7 +156,6 @@
                 return true;
             });
 
-            // Vittoria
             if (crosses.length === 0) {
                 alert("Hai vinto! Hai raccolto tutte le croci!");
                 gameRunning = false;
@@ -141,7 +180,6 @@
         });
 
         canvas.addEventListener('touchstart', handleTouch);
-        canvas.addEventListener('touchmove', handleTouch);
 
         function handleTouch(e) {
             e.preventDefault();
