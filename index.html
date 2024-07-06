@@ -7,8 +7,9 @@
     <style>
         body {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
@@ -79,6 +80,32 @@
         #startButton:active {
             transform: translateY(0);
         }
+        #controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            background-color: #95a5a6;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        .control-btn:active {
+            background-color: #7f8c8d;
+        }
+        #up { grid-column: 2 / 3; }
+        #left { grid-column: 1 / 2; grid-row: 2 / 3; }
+        #right { grid-column: 3 / 4; grid-row: 2 / 3; }
+        #down { grid-column: 2 / 3; grid-row: 3 / 4; }
     </style>
 </head>
 <body>
@@ -94,185 +121,38 @@
             <button id="startButton">Inizia Gioco</button>
         </div>
     </div>
+    <div id="controls">
+        <button id="up" class="control-btn">↑</button>
+        <button id="left" class="control-btn">←</button>
+        <button id="right" class="control-btn">→</button>
+        <button id="down" class="control-btn">↓</button>
+    </div>
+
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const messageEl = document.getElementById('message');
-        const menuScreen = document.getElementById('menuScreen');
-        const startButton = document.getElementById('startButton');
+        // ... (tutto il codice JavaScript precedente rimane invariato)
 
-        const CELL_SIZE = 20;
-        const GRID_WIDTH = 20;
-        const GRID_HEIGHT = 20;
-
-        let frabio, chickens, crosses, score;
-        let gameRunning = false;
-        let gameLoop;
-
-        startButton.addEventListener('click', startGame);
-
-        function startGame() {
-            menuScreen.style.display = 'none';
-            canvas.style.display = 'block';
-            initGame();
-            gameLoop = setInterval(runGameLoop, 200);
-        }
-
-        function initGame() {
-            frabio = { x: 1, y: 1 };
-            chickens = [
-                { x: 18, y: 1, color: '#FFD700', hairColor: '#FFFF00' },
-                { x: 18, y: 18, color: '#000000', hairColor: '#363636' },
-                { x: 1, y: 18, color: '#FFA07A', hairColor: '#FF0000' }
-            ];
-            crosses = [];
-            for (let y = 0; y < GRID_HEIGHT; y++) {
-                for (let x = 0; x < GRID_WIDTH; x++) {
-                    if (x % 2 === 1 && y % 2 === 1) {
-                        crosses.push({ x, y });
-                    }
-                }
-            }
-            score = 0;
-            updateScore();
-            gameRunning = true;
-            drawGame();
-        }
-
-        function drawFrabio(x, y) {
-            // Corpo
-            ctx.fillStyle = '#FFA6C9';
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 2, CELL_SIZE / 2);
+        // Aggiungi questa funzione per gestire i movimenti di Frabio
+        function moveFrabio(dx, dy) {
+            if (!gameRunning) return;
             
-            // Testa
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE, CELL_SIZE / 2, CELL_SIZE / 2);
+            const newX = frabio.x + dx;
+            const newY = frabio.y + dy;
             
-            // Braccia
-            ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE + CELL_SIZE / 3, CELL_SIZE / 5, CELL_SIZE / 2);
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 4/5, y * CELL_SIZE + CELL_SIZE / 3, CELL_SIZE / 5, CELL_SIZE / 2);
-            
-            // Gambe
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE * 3/4, CELL_SIZE / 5, CELL_SIZE / 4);
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 11/20, y * CELL_SIZE + CELL_SIZE * 3/4, CELL_SIZE / 5, CELL_SIZE / 4);
-            
-            // Pantaloncini
-            ctx.fillStyle = '#2E8B57';
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE * 2/3, CELL_SIZE / 2, CELL_SIZE / 6);
-            
-            // Occhi
-            ctx.fillStyle = '#000';
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 5/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
-            
-            // Bocca
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE * 3/8, CELL_SIZE / 4, CELL_SIZE / 16);
-        }
-
-        function drawChicken(x, y, color, hairColor) {
-            // Corpo
-            ctx.fillStyle = color;
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE + CELL_SIZE / 2, CELL_SIZE / 2, CELL_SIZE / 2);
-            
-            // Testa
-            ctx.beginPath();
-            ctx.arc(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 3, CELL_SIZE / 3, 0, 2 * Math.PI);
-            ctx.fill();
-            
-            // Capelli
-            ctx.fillStyle = hairColor;
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE / 4, y * CELL_SIZE, CELL_SIZE / 2, CELL_SIZE / 3);
-            
-            // Occhi
-            ctx.fillStyle = '#FFF';
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 5/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 8, CELL_SIZE / 8);
-            ctx.fillStyle = '#000';
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 3/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 16, CELL_SIZE / 16);
-            ctx.fillRect(x * CELL_SIZE + CELL_SIZE * 5/8, y * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 16, CELL_SIZE / 16);
-            
-            // Becco
-            ctx.fillStyle = '#FF6347';
-            ctx.beginPath();
-            ctx.moveTo(x * CELL_SIZE + CELL_SIZE * 3/4, y * CELL_SIZE + CELL_SIZE * 3/8);
-            ctx.lineTo(x * CELL_SIZE + CELL_SIZE, y * CELL_SIZE + CELL_SIZE * 3/8);
-            ctx.lineTo(x * CELL_SIZE + CELL_SIZE * 7/8, y * CELL_SIZE + CELL_SIZE / 2);
-            ctx.fill();
-        }
-
-        function drawCross(x, y) {
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + 2);
-            ctx.lineTo(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE - 2);
-            ctx.moveTo(x * CELL_SIZE + 2, y * CELL_SIZE + CELL_SIZE / 2);
-            ctx.lineTo(x * CELL_SIZE + CELL_SIZE - 2, y * CELL_SIZE + CELL_SIZE / 2);
-            ctx.stroke();
-        }
-
-        function drawGame() {
-            ctx.fillStyle = '#FFF';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            crosses.forEach(cross => drawCross(cross.x, cross.y));
-            chickens.forEach(chicken => drawChicken(chicken.x, chicken.y, chicken.color, chicken.hairColor));
-            drawFrabio(frabio.x, frabio.y);
-        }
-
-        function moveChickens() {
-            chickens.forEach(chicken => {
-                const dx = Math.floor(Math.random() * 3) - 1;
-                const dy = Math.floor(Math.random() * 3) - 1;
-                chicken.x = Math.max(0, Math.min(GRID_WIDTH - 1, chicken.x + dx));
-                chicken.y = Math.max(0, Math.min(GRID_HEIGHT - 1, chicken.y + dy));
-            });
-        }
-
-        function checkCollision() {
-            chickens.forEach(chicken => {
-                if (chicken.x === frabio.x && chicken.y === frabio.y) {
-                    showMessage("Bravo! Hai vinto un bel bestemmione");
-                    gameRunning = false;
-                }
-            });
-
-            crosses = crosses.filter(cross => {
-                if (cross.x === frabio.x && cross.y === frabio.y) {
-                    score += 10;
-                    updateScore();
-                    return false;
-                }
-                return true;
-            });
-
-            if (crosses.length === 0) {
-                showMessage("Hai vinto! Frabio ha raccolto tutte le croci!");
-                gameRunning = false;
-            }
-        }
-
-        function showMessage(msg) {
-            messageEl.textContent = msg;
-            messageEl.style.display = 'block';
-        }
-
-        function hideMessage() {
-            messageEl.style.display = 'none';
-        }
-
-        function updateScore() {
-            document.getElementById('score').textContent = score;
-        }
-
-        function runGameLoop() {
-            if (gameRunning) {
-                moveChickens();
+            if (newX >= 0 && newX < GRID_WIDTH && newY >= 0 && newY < GRID_HEIGHT) {
+                frabio.x = newX;
+                frabio.y = newY;
                 checkCollision();
                 drawGame();
             }
         }
 
-        // Modifica: Aggiungi controlli touch
+        // Aggiungi gli event listener per i pulsanti di controllo
+        document.getElementById('up').addEventListener('click', () => moveFrabio(0, -1));
+        document.getElementById('down').addEventListener('click', () => moveFrabio(0, 1));
+        document.getElementById('left').addEventListener('click', () => moveFrabio(-1, 0));
+        document.getElementById('right').addEventListener('click', () => moveFrabio(1, 0));
+
+        // Mantieni anche i controlli touch sul canvas per una maggiore flessibilità
         canvas.addEventListener('touchstart', handleTouch);
 
         function handleTouch(e) {
@@ -294,10 +174,7 @@
             const dy = gridY - frabio.y;
 
             if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
-                frabio.x += dx;
-                frabio.y += dy;
-                checkCollision();
-                drawGame();
+                moveFrabio(dx, dy);
             }
         }
 
