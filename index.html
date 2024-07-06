@@ -3,63 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Frabio in ufficio</title>
+    <title>Frabio in ufficio - Debug</title>
     <style>
-        /* ... (il CSS rimane invariato) ... */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #gameCanvas {
+            border: 2px solid black;
+            display: none;
+        }
+        #menuScreen {
+            text-align: center;
+        }
+        #startButton {
+            font-size: 20px;
+            padding: 10px 20px;
+        }
     </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <div id="gameInfo">
-            <p>Punteggio: <span id="score">0</span></p>
-        </div>
-        <div id="message"></div>
-        <div id="menuScreen">
-            <h1>Frabio in ufficio</h1>
-            <p>Aiuta Frabio a raccogliere tutte le croci evitando le galline!</p>
-            <button id="startButton">Inizia Gioco</button>
-        </div>
+    <div id="menuScreen">
+        <h1>Frabio in ufficio</h1>
+        <button id="startButton">Inizia Gioco</button>
     </div>
-    <div id="controls">
-        <button id="up" class="control-btn">↑</button>
-        <button id="left" class="control-btn">←</button>
-        <button id="right" class="control-btn">→</button>
-        <button id="down" class="control-btn">↓</button>
-    </div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const messageEl = document.getElementById('message');
-        const menuScreen = document.getElementById('menuScreen');
         const startButton = document.getElementById('startButton');
-
-        const CELL_SIZE = 20;
-        const GRID_WIDTH = 20;
-        const GRID_HEIGHT = 20;
-
-        let frabio, chickens, crosses, score;
-        let gameRunning = false;
-        let gameLoop;
+        const menuScreen = document.getElementById('menuScreen');
+        const gameCanvas = document.getElementById('gameCanvas');
 
         startButton.addEventListener('click', startGame);
 
         function startGame() {
-            console.log("Funzione startGame chiamata"); // Debug log
+            console.log("Funzione startGame chiamata");
             menuScreen.style.display = 'none';
-            canvas.style.display = 'block';
-            initGame();
-            gameLoop = setInterval(runGameLoop, 200);
+            gameCanvas.style.display = 'block';
+            drawGame();
         }
 
-        // ... (il resto del codice rimane invariato) ...
+        function drawGame() {
+            const ctx = gameCanvas.getContext('2d');
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(0, 0, 50, 50);
+            console.log("Gioco disegnato");
+        }
 
-        // Nascondi il canvas inizialmente
-        canvas.style.display = 'none';
-
-        // Debug: Verifica che il pulsante sia correttamente selezionato
-        console.log("Pulsante Inizia Gioco:", startButton);
+        console.log("Script caricato");
     </script>
 </body>
 </html>
