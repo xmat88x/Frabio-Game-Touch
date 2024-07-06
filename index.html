@@ -129,9 +129,124 @@
     </div>
 
     <script>
-        // ... (tutto il codice JavaScript precedente rimane invariato)
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const messageEl = document.getElementById('message');
+        const menuScreen = document.getElementById('menuScreen');
+        const startButton = document.getElementById('startButton');
 
-        // Aggiungi questa funzione per gestire i movimenti di Frabio
+        const CELL_SIZE = 20;
+        const GRID_WIDTH = 20;
+        const GRID_HEIGHT = 20;
+
+        let frabio, chickens, crosses, score;
+        let gameRunning = false;
+        let gameLoop;
+
+        startButton.addEventListener('click', startGame);
+
+        function startGame() {
+            menuScreen.style.display = 'none';
+            canvas.style.display = 'block';
+            initGame();
+            gameLoop = setInterval(runGameLoop, 200);
+        }
+
+        function initGame() {
+            frabio = { x: 1, y: 1 };
+            chickens = [
+                { x: 18, y: 1, color: '#FFD700', hairColor: '#FFFF00' },
+                { x: 18, y: 18, color: '#000000', hairColor: '#363636' },
+                { x: 1, y: 18, color: '#FFA07A', hairColor: '#FF0000' }
+            ];
+            crosses = [];
+            for (let y = 0; y < GRID_HEIGHT; y++) {
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    if (x % 2 === 1 && y % 2 === 1) {
+                        crosses.push({ x, y });
+                    }
+                }
+            }
+            score = 0;
+            updateScore();
+            gameRunning = true;
+            drawGame();
+        }
+
+        function drawFrabio(x, y) {
+            // ... (il codice per disegnare Frabio rimane invariato) ...
+        }
+
+        function drawChicken(x, y, color, hairColor) {
+            // ... (il codice per disegnare le galline rimane invariato) ...
+        }
+
+        function drawCross(x, y) {
+            // ... (il codice per disegnare le croci rimane invariato) ...
+        }
+
+        function drawGame() {
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            crosses.forEach(cross => drawCross(cross.x, cross.y));
+            chickens.forEach(chicken => drawChicken(chicken.x, chicken.y, chicken.color, chicken.hairColor));
+            drawFrabio(frabio.x, frabio.y);
+        }
+
+        function moveChickens() {
+            chickens.forEach(chicken => {
+                const dx = Math.floor(Math.random() * 3) - 1;
+                const dy = Math.floor(Math.random() * 3) - 1;
+                chicken.x = Math.max(0, Math.min(GRID_WIDTH - 1, chicken.x + dx));
+                chicken.y = Math.max(0, Math.min(GRID_HEIGHT - 1, chicken.y + dy));
+            });
+        }
+
+        function checkCollision() {
+            chickens.forEach(chicken => {
+                if (chicken.x === frabio.x && chicken.y === frabio.y) {
+                    showMessage("Bravo! Hai vinto un bel bestemmione");
+                    gameRunning = false;
+                }
+            });
+
+            crosses = crosses.filter(cross => {
+                if (cross.x === frabio.x && cross.y === frabio.y) {
+                    score += 10;
+                    updateScore();
+                    return false;
+                }
+                return true;
+            });
+
+            if (crosses.length === 0) {
+                showMessage("Hai vinto! Frabio ha raccolto tutte le croci!");
+                gameRunning = false;
+            }
+        }
+
+        function showMessage(msg) {
+            messageEl.textContent = msg;
+            messageEl.style.display = 'block';
+        }
+
+        function hideMessage() {
+            messageEl.style.display = 'none';
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        function runGameLoop() {
+            if (gameRunning) {
+                moveChickens();
+                checkCollision();
+                drawGame();
+            }
+        }
+
         function moveFrabio(dx, dy) {
             if (!gameRunning) return;
             
@@ -146,13 +261,11 @@
             }
         }
 
-        // Aggiungi gli event listener per i pulsanti di controllo
         document.getElementById('up').addEventListener('click', () => moveFrabio(0, -1));
         document.getElementById('down').addEventListener('click', () => moveFrabio(0, 1));
         document.getElementById('left').addEventListener('click', () => moveFrabio(-1, 0));
         document.getElementById('right').addEventListener('click', () => moveFrabio(1, 0));
 
-        // Mantieni anche i controlli touch sul canvas per una maggiore flessibilità
         canvas.addEventListener('touchstart', handleTouch);
 
         function handleTouch(e) {
